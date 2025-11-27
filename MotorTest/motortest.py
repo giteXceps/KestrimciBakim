@@ -1,76 +1,53 @@
 import RPi.GPIO as GPIO
 import time
  
-# PIN eşleşmesi
-IN1 = 17
-IN2 = 27
-IN3 = 5
-IN4 = 6
+IN1 = 17      # Pin 11
+IN2 = 27      # Pin 13
+ENA = 18      # Pin 12 (Yeni ENA pinimiz)
  
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(IN1, GPIO.OUT)
 GPIO.setup(IN2, GPIO.OUT)
-GPIO.setup(IN3, GPIO.OUT)
-GPIO.setup(IN4, GPIO.OUT)
+GPIO.setup(ENA, GPIO.OUT)
  
-# FULL-STEP ve HALF-STEP dizileri
-FULL_STEP = [
-    [1,0,0,0],
-    [0,1,0,0],
-    [0,0,1,0],
-    [0,0,0,1]
-]
+pwm = GPIO.PWM(ENA, 1000)  # PWM 1kHz
+pwm.start(0)
  
-HALF_STEP = [
-    [1,0,0,1],
-    [1,0,0,0],
-    [1,1,0,0],
-    [0,1,0,0],
-    [0,1,1,0],
-    [0,0,1,0],
-    [0,0,1,1],
-    [0,0,0,1]
-]
+def ileri(hiz):
+    GPIO.output(IN1, GPIO.HIGH)
+    GPIO.output(IN2, GPIO.LOW)
+    pwm.ChangeDutyCycle(hiz)
  
-def step_motor(steps, speed=0.001, mode="full"):
-    """
-    steps : Toplam adım sayısı
-    speed : Adımlar arası bekleme süresi (daha düşük = daha hızlı)
-    mode  : "full" veya "half"
-    """
-    seq = FULL_STEP if mode == "full" else HALF_STEP
+def geri(hiz):
+    GPIO.output(IN1, GPIO.LOW)
+    GPIO.output(IN2, GPIO.HIGH)
+    pwm.ChangeDutyCycle(hiz)
  
-    for _ in range(steps):
-        for pattern in seq:
-            GPIO.output(IN1, pattern[0])
-            GPIO.output(IN2, pattern[1])
-            GPIO.output(IN3, pattern[2])
-            GPIO.output(IN4, pattern[3])
-            time.sleep(speed)
- 
-def stop_motor():
-    GPIO.output(IN1, 0)
-    GPIO.output(IN2, 0)
-    GPIO.output(IN3, 0)
-    GPIO.output(IN4, 0)
+def dur():
+    GPIO.output(IN1, GPIO.LOW)
+    GPIO.output(IN2, GPIO.LOW)
+    pwm.ChangeDutyCycle(0)
  
 try:
-    print("Hızlı dönüş başlıyor...")
-    
-    # 1 tam tur ~ 2048 FULL step
-    step_motor(steps=2048, speed=0.0008, mode="full")
-    
-    print("Ters yönde daha hızlı...")
-    step_motor(steps=2048, speed=0.0006, mode="full")
-    
-    print("Yavaş ve güçlü HALF-STEP modu...")
-    step_motor(steps=4096, speed=0.0015, mode="half")
+    print("İleri 60% hız...")
+    ileri(60)
+    time.sleep(3)
  
-    stop_motor()
-    print("Bitti.")
+    print("Duruyor...")
+    dur()
+    time.sleep(1)
+ 
+    print("Geri 80% hız...")
+    geri(80)
+    time.sleep(3)
+ 
+    print("Duruyor...")
+    dur()
  
 except KeyboardInterrupt:
-    stop_motor()
+    pass
  
 finally:
+    pwm.stop()
     GPIO.cleanup()
+ 
