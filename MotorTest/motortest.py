@@ -1,53 +1,31 @@
 import RPi.GPIO as GPIO
 import time
  
-IN1 = 17      # Pin 11
-IN2 = 27      # Pin 13
-ENA = 18      # Pin 12 (Yeni ENA pinimiz)
+IN1 = 17
+IN2 = 27
+ENA = 18
  
+GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
+ 
 GPIO.setup(IN1, GPIO.OUT)
 GPIO.setup(IN2, GPIO.OUT)
 GPIO.setup(ENA, GPIO.OUT)
  
-pwm = GPIO.PWM(ENA, 1000)  # PWM 1kHz
-pwm.start(0)
+print("Motor tam hız ileri (ENA HIGH)")
+GPIO.output(ENA, GPIO.HIGH)
+GPIO.output(IN1, GPIO.HIGH)
+GPIO.output(IN2, GPIO.LOW)
+time.sleep(3)
  
-def ileri(hiz):
-    GPIO.output(IN1, GPIO.HIGH)
-    GPIO.output(IN2, GPIO.LOW)
-    pwm.ChangeDutyCycle(hiz)
+print("Motor tam hız geri (ENA HIGH)")
+GPIO.output(IN1, GPIO.LOW)
+GPIO.output(IN2, GPIO.HIGH)
+time.sleep(3)
  
-def geri(hiz):
-    GPIO.output(IN1, GPIO.LOW)
-    GPIO.output(IN2, GPIO.HIGH)
-    pwm.ChangeDutyCycle(hiz)
+print("Duruyor")
+GPIO.output(IN1, GPIO.LOW)
+GPIO.output(IN2, GPIO.LOW)
+GPIO.output(ENA, GPIO.LOW)
  
-def dur():
-    GPIO.output(IN1, GPIO.LOW)
-    GPIO.output(IN2, GPIO.LOW)
-    pwm.ChangeDutyCycle(0)
- 
-try:
-    print("İleri 60% hız...")
-    ileri(60)
-    time.sleep(3)
- 
-    print("Duruyor...")
-    dur()
-    time.sleep(1)
- 
-    print("Geri 80% hız...")
-    geri(80)
-    time.sleep(3)
- 
-    print("Duruyor...")
-    dur()
- 
-except KeyboardInterrupt:
-    pass
- 
-finally:
-    pwm.stop()
-    GPIO.cleanup()
- 
+GPIO.cleanup()
